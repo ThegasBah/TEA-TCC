@@ -81,30 +81,34 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Rota para atualizar estatísticas
-app.post('/api/status', async (req, res) => {
+const express = require('express');
+const GameStatistics = require('../models/gameStatistics');  // Importe o modelo
+const router = express.Router();
+
+router.post('/status', async (req, res) => {
+    const { userId, gameName, time } = req.body;
+
+    if (!userId || !gameName || !time) {
+        return res.status(400).json({ error: 'Dados insuficientes' });
+    }
+
     try {
-        const { userId, gameName, timeSeconds } = req.body;
-
-        // Verifica se o usuário existe
-        const usuario = await Usuarios.findByPk(userId);
-        if (!usuario) {
-            return res.status(404).json({ error: 'Usuário não encontrado.' });
-        }
-
-        // Cria uma nova estatística
-        const novaEstatistica = await GameStatistics.create({
+        // Inserir estatísticas no banco de dados
+        const newStatistic = await GameStatistics.create({
             userId,
             gameName,
-            timeSeconds,
+            timeSeconds: time,
+            playDate: new Date()
         });
 
-        res.status(201).json({ message: 'Estatística criada com sucesso!', estatistica: novaEstatistica });
+        res.status(201).json({ message: 'Estatísticas registradas com sucesso!', data: newStatistic });
     } catch (error) {
-        console.error('Erro ao criar estatística:', error);
-        res.status(500).json({ error: 'Erro ao registrar estatística.' });
+        console.error('Erro ao salvar estatísticas:', error);
+        res.status(500).json({ error: 'Erro ao salvar estatísticas' });
     }
 });
+
+module.exports = router;
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
